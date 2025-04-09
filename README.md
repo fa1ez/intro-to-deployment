@@ -53,3 +53,7 @@ Navigate to **Elastic Beanstalk** in the AWS Console.
 
 ### 🎉 Deployment Complete
 A sample application will now be deployed automatically!
+
+### Post deployemt using github actions
+- create an IAM user if not already created and download the secrets of IAM user that you want to run github actions with
+- add those secrets in github and add the workflow file attached in repo to the project and update name of project, env and region
