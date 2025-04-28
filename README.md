@@ -57,3 +57,72 @@ A sample application will now be deployed automatically!
 ### Post deployemt using github actions
 - create an IAM user if not already created and download the secrets of IAM user that you want to run github actions with
 - add those secrets in github and add the workflow file attached in repo to the project and update name of project, env and region
+
+<br>
+<br>
+<br>
+
+<br>
+<br>
+<br>
+
+## 🖥️ Frontend Deployemnt on S3 Bucket and cloudfront
+
+### 1. Create S3 Bucket
+- Give a **unique bucket name**.
+- **Uncheck** "Block all public access".
+- Click **Save changes**.
+
+---
+
+### 2. Enable Static Website Hosting
+- Go to `Bucket > Properties > Static website hosting`.
+  - Enable **Static website hosting**.
+  - For **Index document**, enter: `index.html`.
+  - For **Error document**, enter: `index.html` (if no separate error file is present).
+- Save changes.
+
+---
+
+### 3. Update Bucket Permissions
+
+#### 🛡️ Bucket Policy
+- Go to `Bucket > Permissions > Bucket Policy`.
+- Add the following policy:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicReadGetObject",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::{{bucketName}}/*"
+        }
+    ]
+}
+```
+- update CORS settings as well:
+
+```json
+[
+    {
+        "AllowedHeaders": [
+            "*"
+        ],
+        "AllowedMethods": [
+            "GET",
+            "PUT",
+            "POST",
+            "HEAD"
+        ],
+        "AllowedOrigins": [*],
+        "ExposeHeaders": [
+            "ETag"
+        ],
+        "MaxAgeSeconds": 3000
+    }
+]
+```
