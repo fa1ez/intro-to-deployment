@@ -68,11 +68,12 @@ Before beginning, ensure you have the following:
 
 1.  **Create an IAM User for GitHub:**
     *   Navigate to the **IAM** service.
-    *   Go to `Users > Add users`.
+    *   Go to `Users > Create users`.
     *   **User name:** `github-actions-deployer`.
-    *   **AWS credential type:** Select **Access key - Programmatic access**.
+    *   Chech the `Provide user access to the AWS Management Console` checkbox
+    *   Choose `I want to create an IAM user` and then use opt for auto generated password
     *   On the permissions page, select **Attach existing policies directly**.
-    *   Search for and attach the `AWSElasticBeanstalkFullAccess` policy.
+    *   Search for and attach the `AmazonS3FullAccess` policy.
     *   Proceed through the remaining steps to create the user.
     *   On the final screen, copy the **Access key ID** and **Secret access key**. These credentials are shown only once.
 
@@ -162,11 +163,97 @@ Before beginning, ensure you have the following:
     ```
 4.  Click **Save changes**.
 
-### Step 4: Upload Frontend Assets
+### Step 4: Upload Frontend Assets (optional if automated with pipeline)
 
 1.  Build your frontend application locally to generate a `build` or `dist` directory.
 2.  Navigate to the **Objects** tab of your S3 bucket.
 3.  Upload the *contents* of your `build` or `dist` directory to the root of the bucket.
+
+### CI/CD Automation with GitHub Actions
+
+1.  **Create an IAM User for GitHub:**
+    *   Navigate to the **IAM** service.
+    *   Go to `Users > Create users`.
+    *   **User name:** `github-actions-deployer`.
+    *   Chech the `Provide user access to the AWS Management Console` checkbox
+    *   Choose `I want to create an IAM user` and then use opt for auto generated password
+    *   On the permissions page, select **Attach existing policies directly**.
+    *   Search for and attach the `AmazonS3FullAccess` policy.
+    *   Proceed through the remaining steps to create the user.
+    *   On the final screen, copy the **Access key ID** and **Secret access key**. These credentials are shown only once.
+
+2.  **Configure GitHub Secrets:**
+    *   In your GitHub repository, navigate to `Settings > Secrets and variables > Actions`.
+    *   Create the following two repository secrets:
+        *   `AWS_ACCESS_KEY_ID`: The Access Key ID from the IAM user.
+        *   `AWS_SECRET_ACCESS_KEY`: The Secret Access Key from the IAM user.
+
+3.  **Create the Workflow File:**
+    *   In your repository, create the directory `.github/workflows/`.
+    *   Inside this directory, create a file named `main.yml`.
+    *   Add the following YAML configuration, updating the placeholder values as indicated.
+
+    ```yaml
+    name: GitHub Pages
+    on:
+       push:
+          branches:
+             - master
+    jobs:
+       deploy:
+          runs-on: ubuntu-latest
+          steps:
+            # Configure AWS Credentials
+            - name: Configure AWS Credentials
+              uses: aws-actions/configure-aws-credentials@v1
+              with:
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws-region: us-west-1
+
+            # Checkout the repository
+            - name: Checkout
+              uses: actions/checkout@v2
+
+            # Cache Node.js dependencies
+            - name: Cache Node.js modules
+              uses: actions/cache@v3
+              with:
+                path: ~/.npm
+                key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+                restore-keys: |
+                  ${{ runner.os }}-node-
+
+            # Setup Node.js environment
+            - name: Setup Node.js
+              uses: actions/setup-node@v2
+              with:
+                node-version: 18
+      
+            # Install dependencies
+            - name: Install dependencies
+              run: npm ci --prefer-offline
+      
+            # Build the application
+            - name: Build
+              run: npm run build
+      
+            # Deploy to S3
+            - name: Deploy to S3
+              run: aws s3 sync ./{{build folder}} s3://{{bucket_name}} --delete
+      
+            # Invalidate CloudFront cache
+            - name: Invalidate CloudFront Cache
+              uses: chetan/invalidate-cloudfront-action@v2
+              env:
+                DISTRIBUTION: ${{ secrets.AWS_DISTRIBUTATION_ID }}
+                PATHS: "/*"
+                AWS_REGION: us-west-1
+                AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    ```
+
 
 ### Step 5: Create CloudFront Distribution
 
