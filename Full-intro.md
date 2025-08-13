@@ -70,7 +70,6 @@ Before beginning, ensure you have the following:
     *   Navigate to the **IAM** service.
     *   Go to `Users > Create users`.
     *   **User name:** `github-actions-deployer`.
-    *   Chech the `Provide user access to the AWS Management Console` checkbox
     *   Choose `I want to create an IAM user` and then use opt for auto generated password
     *   On the permissions page, select **Attach existing policies directly**.
     *   Search for and attach the `AmazonS3FullAccess` policy.
@@ -175,7 +174,6 @@ Before beginning, ensure you have the following:
     *   Navigate to the **IAM** service.
     *   Go to `Users > Create users`.
     *   **User name:** `github-actions-deployer`.
-    *   Chech the `Provide user access to the AWS Management Console` checkbox
     *   Choose `I want to create an IAM user` and then use opt for auto generated password
     *   On the permissions page, select **Attach existing policies directly**.
     *   Search for and attach the `AmazonS3FullAccess` policy.
